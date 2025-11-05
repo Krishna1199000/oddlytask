@@ -27,6 +27,8 @@ import {
   Info,
   Menu,
   X,
+  Pause,
+  Square,
 } from 'lucide-react';
 import { BurnRateChart } from './BurnRateChart';
 import { MetricsCards } from './MetricsCard';
@@ -90,6 +92,9 @@ export function BurnRateAssistant() {
   const [showMetrics, setShowMetrics] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const streamControllerRef = useRef<{ shouldPause: boolean; shouldStop: boolean }>({ shouldPause: false, shouldStop: false });
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -98,12 +103,55 @@ export function BurnRateAssistant() {
 
   const streamText = async (text: string) => {
     setStreamedText('');
+    setIsStreaming(true);
+    setIsPaused(false);
+    streamControllerRef.current = { shouldPause: false, shouldStop: false };
     
     // Stream character by character for smoother effect - faster speed
     for (let i = 0; i < text.length; i++) {
+      // Check if paused
+      while (streamControllerRef.current.shouldPause && !streamControllerRef.current.shouldStop) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      // Check if stopped
+      if (streamControllerRef.current.shouldStop) {
+        break;
+      }
+      
       await new Promise(resolve => setTimeout(resolve, 5));
       setStreamedText(prev => prev + text[i]);
     }
+    
+    setIsStreaming(false);
+    setIsPaused(false);
+  };
+
+  const handlePause = () => {
+    // Stop streaming and save current streamed text as a message
+    streamControllerRef.current.shouldStop = true;
+    streamControllerRef.current.shouldPause = false;
+    
+    // If there's streamed text, save it as a message
+    if (streamedText.trim()) {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          type: 'assistant',
+          content: streamedText,
+          timestamp: new Date(),
+        },
+      ]);
+    }
+    
+    setIsStreaming(false);
+    setIsPaused(false);
+    setStreamedText('');
+    setIsProcessing(false);
+    setCurrentStep(0);
+    // Clear input to allow new message
+    setInputValue('');
   };
 
   const processSteps = async () => {
@@ -111,6 +159,10 @@ export function BurnRateAssistant() {
     setShowRightPanel(true);
 
     for (let i = 0; i < steps.length; i++) {
+      // Check if streaming was stopped
+      if (streamControllerRef.current.shouldStop) {
+        return;
+      }
       setCurrentStep(i + 1);
       await new Promise(resolve => setTimeout(resolve, steps[i].delay));
 
@@ -119,12 +171,22 @@ export function BurnRateAssistant() {
       }
     }
 
+    // Check if streaming was stopped
+    if (streamControllerRef.current.shouldStop) {
+      return;
+    }
+
     await new Promise(resolve => setTimeout(resolve, 500));
     
     // Reset currentStep before streaming starts to hide "Burn rate analysis complete"
     setCurrentStep(0);
     
     await streamText(assistantResponse);
+
+    // Check if streaming was stopped before adding message
+    if (streamControllerRef.current.shouldStop) {
+      return;
+    }
 
     // Add message to messages array after streaming completes
     setMessages(prev => [
@@ -140,11 +202,17 @@ export function BurnRateAssistant() {
     // Clear streamedText after adding to messages to prevent duplicate
     setStreamedText('');
     setIsProcessing(false);
+    setIsStreaming(false);
+    setIsPaused(false);
     setShowQuickActions(true);
   };
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isProcessing) return;
+
+    // Reset any previous streaming state
+    streamControllerRef.current = { shouldPause: false, shouldStop: false };
+    setStreamedText('');
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -154,7 +222,9 @@ export function BurnRateAssistant() {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const messageText = inputValue;
     setInputValue('');
+    setIsStreaming(true); // Change to pause design immediately when message is sent
 
     await processSteps();
   };
@@ -327,8 +397,10 @@ export function BurnRateAssistant() {
               <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
                 <AnimatePresence mode="popLayout">
                   {messages.map((message, index) => {
-                    // Skip assistant messages that are currently being streamed
-                    if (message.type === 'assistant' && streamedText) {
+                    // Skip assistant messages that are currently being streamed (but only if they're the last one)
+                    // This prevents hiding paused messages when a new stream starts
+                    const isLastAssistantMessage = index === messages.length - 1 && message.type === 'assistant';
+                    if (message.type === 'assistant' && streamedText && isLastAssistantMessage && isStreaming) {
                       return null;
                     }
                     return (
@@ -510,27 +582,51 @@ export function BurnRateAssistant() {
 
             <div className="border-t border-gray-200 px-3 sm:px-6 py-3 sm:py-4 bg-white">
               <div className="max-w-3xl mx-auto">
-                <div className="relative flex items-end gap-2 bg-gray-50 rounded-2xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 focus-within:border-gray-300 transition-colors">
-                  <button className="p-1 hover:bg-gray-200 rounded transition-colors mb-1 flex-shrink-0">
-                    <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                  </button>
-                  <textarea
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Ask me anything"
-                    rows={1}
-                    className="flex-1 bg-transparent border-none outline-none resize-none text-xs sm:text-sm text-gray-900 placeholder:text-gray-400 min-w-0"
-                    disabled={isProcessing}
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!inputValue.trim() || isProcessing}
-                    className="p-1.5 sm:p-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-0.5 flex-shrink-0"
-                  >
-                    <ArrowUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  </button>
-                </div>
+                {isStreaming ? (
+                  // Streaming state - clean design with pause button
+                  <div className="relative flex items-center gap-2 bg-gray-50 rounded-2xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-200">
+                    <button className="p-1 hover:bg-gray-200 rounded transition-colors flex-shrink-0">
+                      <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <input
+                        type="text"
+                        placeholder="Ask me anything"
+                        className="w-full bg-transparent border-none outline-none text-xs sm:text-sm text-gray-900 placeholder:text-gray-400 min-w-0"
+                        disabled
+                      />
+                    </div>
+                    <button
+                      onClick={handlePause}
+                      className="w-8 h-8 sm:w-9 sm:h-9 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center flex-shrink-0"
+                    >
+                      <Square className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-white" />
+                    </button>
+                  </div>
+                ) : (
+                  // Normal state - original design
+                  <div className="relative flex items-end gap-2 bg-gray-50 rounded-2xl px-3 sm:px-4 py-2 sm:py-3 border border-gray-200 focus-within:border-gray-300 transition-colors">
+                    <button className="p-1 hover:bg-gray-200 rounded transition-colors mb-1 flex-shrink-0">
+                      <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                    </button>
+                    <textarea
+                      value={inputValue}
+                      onChange={(e) => setInputValue(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Ask me anything"
+                      rows={1}
+                      className="flex-1 bg-transparent border-none outline-none resize-none text-xs sm:text-sm text-gray-900 placeholder:text-gray-400 min-w-0"
+                      disabled={isProcessing}
+                    />
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={!inputValue.trim() || isProcessing}
+                      className="p-1.5 sm:p-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-0.5 flex-shrink-0"
+                    >
+                      <ArrowUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
