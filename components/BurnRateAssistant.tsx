@@ -441,8 +441,8 @@ export function BurnRateAssistant() {
                       {message.type === 'user' ? (
                         // User: bubble on right, small avatar to the right of bubble
                         <div className="flex items-end justify-end gap-1 max-w-[90%] sm:max-w-[85%]">
-                          <div className="rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 bg-neutral-50 text-neutral-900 border border-neutral-200 shadow-sm">
-                            <p className="text-xs sm:text-sm whitespace-pre-wrap break-words text-neutral-800">{message.content}</p>
+                          <div className="rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 bg-neutral-100 text-neutral-900 shadow-sm">
+                            <p className="text-xs sm:text-sm whitespace-pre-wrap break-words text-neutral-900">{message.content}</p>
                           </div>
                           <Avatar className="w-4 h-4 sm:w-5 sm:h-5">
                             <AvatarImage src="https://i.pravatar.cc/150?img=68" alt="User" />
