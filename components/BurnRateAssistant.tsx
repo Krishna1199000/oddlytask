@@ -256,7 +256,7 @@ export function BurnRateAssistant() {
   };
 
   return (
-    <div className="flex h-screen bg-white overflow-y-hidden overflow-x-auto text-neutral-800">
+    <div className="flex h-screen bg-white overflow-y-hidden overflow-x-hidden text-neutral-800">
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div 
@@ -363,7 +363,7 @@ export function BurnRateAssistant() {
           </div>
         </header>
 
-        <div className="flex-1 flex flex-col lg:flex-row overflow-x-auto overflow-y-hidden min-w-0">
+        <div className="flex-1 flex flex-col lg:flex-row overflow-x-hidden overflow-y-hidden min-w-0">
           <div className="flex-1 flex flex-col min-w-0">
             {/* Main Content Header with centered title, left chevron, right actions */}
             <div className="px-5 py-3 mt-5 sm:mt-6 grid grid-cols-3 items-center">
@@ -401,12 +401,7 @@ export function BurnRateAssistant() {
               <div className="w-full pr-3 sm:pr-4 pl-2 sm:pl-4 space-y-4 sm:space-y-6">
                 <AnimatePresence mode="popLayout">
                   {messages.map((message, index) => {
-                    // Skip assistant messages that are currently being streamed (but only if they're the last one)
-                    // This prevents hiding paused messages when a new stream starts
-                    const isLastAssistantMessage = index === messages.length - 1 && message.type === 'assistant';
-                    if (message.type === 'assistant' && streamedText && isLastAssistantMessage && isStreaming) {
-                      return null;
-                    }
+                    // Always render previous messages to avoid visual cutting during streaming
                   // Standard placement: user on right, assistant on left
                   const shouldCenterUserMessage = false;
                   const hideAssistantAvatar = message.type === 'assistant' && (
@@ -573,8 +568,8 @@ export function BurnRateAssistant() {
                     transition={{ delay: 0.1 }}
                     className="flex gap-2 pl-0 mt-6 mb-0 justify-start"
                   >
-                    <div className="flex-1 overflow-x-auto min-w-0 mr-auto">
-                      <div className="flex gap-2 pb-1">
+                    <div className="flex-1 min-w-0 mr-auto">
+                      <div className="flex gap-2 pb-1 flex-wrap">
                         {quickActions.map((action, index) => (
                           <button
                             key={index}
