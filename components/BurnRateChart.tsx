@@ -43,10 +43,16 @@ export function BurnRateChart() {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 10, right: 10, left: -5, bottom: 10 }}>
             <defs>
-              <linearGradient id="shadedArea" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#d1d5db" stopOpacity={0.4} />
+              {/* Soft background for the area */}
+              <linearGradient id="shadedAreaBg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#d1d5db" stopOpacity={0.35} />
                 <stop offset="100%" stopColor="#d1d5db" stopOpacity={0.1} />
               </linearGradient>
+              {/* Diagonal hatch lines inside the area */}
+              <pattern id="shadedHatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(0)">
+                <rect width="8" height="8" fill="transparent" />
+                <path d="M-2 6 L6 -2 M0 8 L8 0 M2 10 L10 2" stroke="#bfc5ce" strokeWidth="1" />
+              </pattern>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
             <XAxis
@@ -75,12 +81,21 @@ export function BurnRateChart() {
               }}
               formatter={(value: number) => [`${value.toLocaleString()} kr`, '']}
             />
-            {/* Shaded area */}
+            {/* Shaded area background */}
             <Area
               type="monotone"
               dataKey="shaded"
               stroke="none"
-              fill="url(#shadedArea)"
+              fill="url(#shadedAreaBg)"
+              isAnimationActive={false}
+            />
+            {/* Hatch overlay for lines inside the area */}
+            <Area
+              type="monotone"
+              dataKey="shaded"
+              stroke="none"
+              fill="url(#shadedHatch)"
+              fillOpacity={0.6}
               isAnimationActive={false}
             />
             {/* Average line - dashed */}

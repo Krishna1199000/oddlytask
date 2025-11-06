@@ -77,12 +77,13 @@ Your burn rate has decreased by 93% over the past 13 months.
 
 The chart on the right shows your monthly burn rate trends with current vs average spending patterns, while the metrics provide additional context about your financial runway and expense breakdown.`;
 
-const quickActions = [
-  'low projections for next 3 months',
+// Quick actions data
+const quickActions: string[] = [
+  'Show projections for next 3 months',
   'Compare monthly burn rate to previous year',
-  'Identify funding options before cash runway ends',
-  'Project runway for next 6 months',
-  'Suggest top 5 cost-saving measures',
+  'Identify funding options before runway ends',
+  'Breakdown top expense categories',
+  'Recommend cost-saving measures',
 ];
 
 export function BurnRateAssistant() {
@@ -94,7 +95,7 @@ export function BurnRateAssistant() {
   const [showRightPanel, setShowRightPanel] = useState(false);
   const [streamedText, setStreamedText] = useState('');
   const [showMetrics, setShowMetrics] = useState(false);
-  const [showQuickActions, setShowQuickActions] = useState(false);
+  // Quick actions do not require dedicated state; we reuse input setter
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -209,7 +210,7 @@ export function BurnRateAssistant() {
     setIsProcessing(false);
     setIsStreaming(false);
     setIsPaused(false);
-    setShowQuickActions(true);
+    // End of processing
   };
 
   const handleSendMessage = async () => {
@@ -283,8 +284,7 @@ export function BurnRateAssistant() {
               </button>
             </div>
 
-            {/* Divider */}
-            <div className="w-full border-b border-neutral-200 mb-3" />
+            {/* Divider removed to avoid double top line */}
 
             {/* Main Icon List - 10 icons */}
             <div className="flex flex-col gap-2 w-full px-2 flex-1 mt-3 sm:mt-4 overflow-y-auto pb-4">
@@ -329,7 +329,7 @@ export function BurnRateAssistant() {
 
       
         <div className="flex-1 flex flex-col">
-        <header className="border-b border-neutral-200 flex items-center justify-between px-6 pt-4 pb-3 bg-white">
+        <header className="relative flex items-center justify-between px-6 pt-4 pb-3 bg-white">
           <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
             {/* Mobile Menu Button */}
             <button 
@@ -361,6 +361,8 @@ export function BurnRateAssistant() {
               <AvatarFallback className="bg-black text-white text-xs">U</AvatarFallback>
             </Avatar>
           </div>
+          {/* Full-width divider above sidebar to make the line collide */}
+          <div className="pointer-events-none absolute right-0 -left-16 bottom-0 border-b border-neutral-200 z-[60]" />
         </header>
 
         <div className="flex-1 flex flex-col lg:flex-row overflow-x-hidden overflow-y-hidden min-w-0">
@@ -561,26 +563,30 @@ export function BurnRateAssistant() {
                   )}
                 </AnimatePresence>
 
-                {showQuickActions && messages.length > 0 && !isProcessing && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="flex gap-2 pl-0 mt-6 mb-0 justify-start"
-                  >
-                    <div className="flex-1 min-w-0 mr-auto">
-                      <div className="flex gap-2 pb-1 flex-wrap">
-                        {quickActions.map((action, index) => (
-                          <button
-                            key={index}
-                            className="px-3 sm:px-3.5 py-1.5 text-xs text-gray-700 bg-white border border-gray-200 rounded-full hover:bg-gray-50 transition-colors whitespace-nowrap flex-shrink-0"
-                          >
-                            {action}
-                          </button>
-                        ))}
+                {/* Quick actions row */}
+                {(() => {
+                  const hasAssistantMessage = messages.some(m => m.type === 'assistant');
+                  const canShowQuickActions = hasAssistantMessage && !isProcessing && !isStreaming && !isThinking && streamedText === '';
+                  return canShowQuickActions;
+                })() && (
+                  <div className="pt-1">
+                    <div className="relative">
+                      {/* horizontally scrollable only for buttons */}
+                      <div className="overflow-x-auto overflow-y-hidden -mx-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                        <div className="px-1 inline-flex gap-2">
+                          {quickActions.map((action, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setInputValue(action)}
+                              className="shrink-0 rounded-full border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 text-xs sm:text-sm px-3 py-1.5"
+                            >
+                              {action}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
 
                 <div ref={chatEndRef} />
@@ -655,9 +661,11 @@ export function BurnRateAssistant() {
                 animate={{ x: 0, opacity: 1 }}
                 exit={{ x: 400, opacity: 0 }}
                 transition={{ duration: 0.4, ease: 'easeOut' }}
-                className="hidden lg:block w-[640px] flex-shrink-0 border-l border-gray-200 bg-white overflow-y-auto"
+                className="hidden lg:block w-[640px] flex-shrink-0 bg-transparent overflow-y-auto p-4"
               >
-                <div className="p-4 lg:p-6 relative min-h-full flex flex-col">
+                <div className="relative flex flex-col">
+                  {/* Boxed analysis panel */}
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 lg:p-6 relative flex flex-col">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-sm font-medium text-gray-500">Analysis</h3>
                   </div>
@@ -748,6 +756,7 @@ export function BurnRateAssistant() {
                     <button className="bg-black text-white rounded-full w-9 h-9 lg:w-10 lg:h-10 flex items-center justify-center shadow-lg hover:bg-gray-800 transition-colors">
                       <span className="text-xs lg:text-sm font-medium">A</span>
                     </button>
+                  </div>
                   </div>
                 </div>
               </motion.aside>
