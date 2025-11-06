@@ -15,18 +15,18 @@ function MetricCard({ title, value, subtitle, delay = 0 }: MetricCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay }}
-      className="bg-white rounded-lg border border-gray-200 p-3 sm:p-4"
+      className="bg-white rounded-lg border border-gray-200 p-3.5"
     >
-      <h4 className="text-xs font-medium text-gray-500 mb-1.5 sm:mb-2">{title}</h4>
-      <p className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1">{value}</p>
-      <p className="text-xs text-gray-500 leading-tight">{subtitle}</p>
+      <h4 className="text-[11px] font-medium text-gray-500 mb-1.5">{title}</h4>
+      <p className="text-xl font-semibold text-gray-900 mb-1 leading-tight">{value}</p>
+      <p className="text-[11px] text-gray-500 leading-tight">{subtitle}</p>
     </motion.div>
   );
 }
 
 export function MetricsCards() {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 gap-3">
       <MetricCard
         title="Current Monthly Burn"
         value="12 758,56 kr"
