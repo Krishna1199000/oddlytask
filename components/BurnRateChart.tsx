@@ -8,14 +8,14 @@ const data = [
   { month: 'Nov', current: 470000, average: 100000, shaded: 470000 },
   { month: 'Dec', current: 280000, average: 100000, shaded: 280000 },
   { month: 'Jan', current: 150000, average: 100000, shaded: 150000 },
-  { month: 'Feb', current: 5000, average: 100000, shaded: 0 },
-  { month: 'Mar', current: 80000, average: 100000, shaded: 0 },
-  { month: 'Apr', current: 30000, average: 100000, shaded: 0 },
-  { month: 'May', current: 20000, average: 100000, shaded: 0 },
-  { month: 'Jun', current: 15000, average: 100000, shaded: 0 },
-  { month: 'Jul', current: 10000, average: 100000, shaded: 0 },
-  { month: 'Aug', current: 5000, average: 100000, shaded: 0 },
-  { month: 'Sep', current: 10000, average: 100000, shaded: 0 },
+  { month: 'Feb', current: 5000, average: 100000, shaded: 5000 },
+  { month: 'Mar', current: 80000, average: 100000, shaded: 80000 },
+  { month: 'Apr', current: 30000, average: 100000, shaded: 30000 },
+  { month: 'May', current: 20000, average: 100000, shaded: 20000 },
+  { month: 'Jun', current: 15000, average: 100000, shaded: 15000 },
+  { month: 'Jul', current: 10000, average: 100000, shaded: 10000 },
+  { month: 'Aug', current: 5000, average: 100000, shaded: 5000 },
+  { month: 'Sep', current: 10000, average: 100000, shaded: 10000 },
 ];
 
 export function BurnRateChart() {

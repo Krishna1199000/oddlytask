@@ -86,6 +86,8 @@ const quickActions: string[] = [
   'Recommend cost-saving measures',
 ];
 
+const titleText = 'Burn Rate Analysis with Runway Projections';
+
 export function BurnRateAssistant() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -100,6 +102,7 @@ export function BurnRateAssistant() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+  const [streamedTitle, setStreamedTitle] = useState('');
   const streamControllerRef = useRef<{ shouldPause: boolean; shouldStop: boolean }>({ shouldPause: false, shouldStop: false });
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -131,6 +134,16 @@ export function BurnRateAssistant() {
     
     setIsStreaming(false);
     setIsPaused(false);
+  };
+
+  const streamTitle = async (text: string) => {
+    setStreamedTitle('');
+    const words = text.split(' ');
+    for (let i = 0; i < words.length; i++) {
+      if (streamControllerRef.current.shouldStop) break;
+      await new Promise(resolve => setTimeout(resolve, 120));
+      setStreamedTitle(prev => (prev ? prev + ' ' : '') + words[i]);
+    }
   };
 
   const handlePause = () => {
@@ -246,6 +259,8 @@ export function BurnRateAssistant() {
     }
     
     setIsThinking(false);
+    // After thinking, stream the title
+    streamTitle(titleText);
     await processSteps();
   };
 
@@ -377,9 +392,9 @@ export function BurnRateAssistant() {
               </div>
               {/* Center: Title */}
               <div className="flex items-center justify-center">
-                {messages.length > 0 && (
+                {streamedTitle && (
                   <h1 className="text-sm font-medium text-neutral-700 text-center leading-5">
-                    Burn Rate Analysis with Runway Projections
+                    {streamedTitle}
                   </h1>
                 )}
               </div>
