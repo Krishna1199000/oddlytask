@@ -415,8 +415,7 @@ export function BurnRateAssistant() {
                 </div>
               )}
 
-              <div className="w-full pr-3 sm:pr-4 pl-2 sm:pl-4">
-                <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
+              <div className="w-full pr-3 sm:pr-4 pl-2 sm:pl-4 space-y-4 sm:space-y-6">
                 <AnimatePresence mode="popLayout">
                   {messages.map((message, index) => {
                     // Always render previous messages to avoid visual cutting during streaming
@@ -606,7 +605,6 @@ export function BurnRateAssistant() {
                 )}
 
                 <div ref={chatEndRef} />
-                </div>
               </div>
             </div>
 
